@@ -24,8 +24,8 @@ export class Game {
     this.board.update();
   }
 
-  keyPressed(evt: { keyCode: number }) {
-    switch (evt.keyCode) {
+  move(movementCode: number) {
+    switch (movementCode) {
       case this.p.UP_ARROW:
         this.board.moveTop();
         break;

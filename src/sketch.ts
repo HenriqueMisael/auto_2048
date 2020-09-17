@@ -1,7 +1,11 @@
 import p5 from 'p5';
+
 import { Game } from './game/game';
+import { Player } from './player/player';
+import { KeyboardPlayer } from './player/human';
 
 const sketch = function (p: p5) {
+  const players: Player[] = [];
   const games: Game[] = [];
   let gamesMatrix: Game[][] = [];
 
@@ -21,7 +25,11 @@ const sketch = function (p: p5) {
   p.preload = () => {};
 
   p.setup = function () {
-    for (let i = 0; i < 16; i++) games.push(new Game(p));
+    // for (let i = 0; i < 16; i++) games.push(new Game(p));
+
+    const game = new Game(p);
+    games.push(game);
+    players.push(new KeyboardPlayer(game));
 
     distributeGames(games);
 
@@ -51,11 +59,13 @@ const sketch = function (p: p5) {
       });
       p.pop();
     });
+
+    players.forEach((player) => player.turnPassed());
   };
 
   // @ts-ignore
   p.keyPressed = function (evt) {
-    games.forEach((game) => game.keyPressed(evt));
+    players.forEach((player: Player) => player.keyPressed(evt));
   };
 };
 
