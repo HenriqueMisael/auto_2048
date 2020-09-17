@@ -1,12 +1,9 @@
 import { randomInt } from '../sketch';
 
-import { Player } from './player';
+import { AutoPlayer } from './auto';
 
-export class RandomPlayer extends Player {
-  private static moveOptions = [37, 38, 39, 40];
-
-  keyPressed(evt: { keyCode: number }) {}
-  turnPassed() {
-    this.game.move(RandomPlayer.moveOptions[randomInt(0, 3)]);
+export class RandomPlayer extends AutoPlayer {
+  protected get moveOption() {
+    return randomInt(0, 3);
   }
 }

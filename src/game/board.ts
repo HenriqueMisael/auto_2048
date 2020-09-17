@@ -1,11 +1,14 @@
 import { Piece } from './piece';
 import p5 from 'p5';
+import { mapRange } from '../sketch';
 
 export class Board {
-  private slots: (Piece | null)[][];
+  public readonly slots: (Piece | null)[][];
   private p: p5;
 
   private _madeMove: boolean;
+
+  public unsuccessfulMoves: string[] = [];
 
   constructor(p: p5) {
     this._madeMove = false;
@@ -20,38 +23,66 @@ export class Board {
     this.insertRandom();
   }
 
-  public get madeMove() {
-    const madeMove = this._madeMove;
+  private endMovement(movementCode: 'Top' | 'Left' | 'Down' | 'Right') {
+    if (this._madeMove) {
+      this._madeMove = false;
+      this.unsuccessfulMoves = [];
+      this.insertRandom();
+    } else {
+      this.unsuccessfulMoves.push(movementCode);
+    }
+  }
 
-    this._madeMove = false;
+  public get isStuck() {
+    return (
+      this.unsuccessfulMoves.length > 4 ||
+      (this.unsuccessfulMoves.includes('Top') &&
+        this.unsuccessfulMoves.includes('Left') &&
+        this.unsuccessfulMoves.includes('Down') &&
+        this.unsuccessfulMoves.includes('Right'))
+    );
+  }
 
-    return madeMove;
+  public get state() {
+    return this.slots.map((row) =>
+      row
+        .map((piece) => piece?.level ?? 0)
+        .map((level) => mapRange(level, [0, 13], [0, 1])),
+    );
   }
 
   public static readonly border = 4;
 
-  update() {
-    this.p.strokeWeight(0);
-    this.p.translate(Board.border, Board.border);
-    this.slots.forEach((row, i) =>
-      row.forEach((piece, j) => {
-        this.p.fill(piece ? piece.color : '#888888');
+  update(draw: boolean) {
+    if (!draw) {
+      this.slots.forEach((row) =>
+        row.forEach((piece) => {
+          if (piece) piece.reset();
+        }),
+      );
+    } else {
+      this.p.strokeWeight(0);
+      this.p.translate(Board.border, Board.border);
+      this.slots.forEach((row, i) =>
+        row.forEach((piece, j) => {
+          this.p.fill(piece ? piece.color : '#888888');
 
-        const top = i * (Piece.size + Board.border);
-        const left = j * (Piece.size + Board.border);
+          const top = i * (Piece.size + Board.border);
+          const left = j * (Piece.size + Board.border);
 
-        this.p.square(left, top, Piece.size);
+          this.p.square(left, top, Piece.size);
 
-        if (!piece) return;
-        this.p.fill('white');
-        this.p.textSize(16);
-        this.p.textStyle(this.p.BOLD);
-        this.p.textAlign(this.p.CENTER, this.p.CENTER);
-        this.p.text(piece.value, left + Piece.middleOffset, top + Piece.middleOffset);
+          if (!piece) return;
+          this.p.fill('white');
+          this.p.textSize(16);
+          this.p.textStyle(this.p.BOLD);
+          this.p.textAlign(this.p.CENTER, this.p.CENTER);
+          this.p.text(piece.value, left + Piece.middleOffset, top + Piece.middleOffset);
 
-        piece.reset();
-      }),
-    );
+          piece.reset();
+        }),
+      );
+    }
   }
 
   private checkRowMovement(
@@ -93,6 +124,7 @@ export class Board {
         piece = this.checkRowMovement(row, j, emptySlots, piece);
       }
     });
+    this.endMovement('Left');
   }
 
   public moveRight() {
@@ -104,6 +136,7 @@ export class Board {
         piece = this.checkRowMovement(row, j, emptySlots, piece);
       }
     });
+    this.endMovement('Right');
   }
 
   private checkColumnMovement(
@@ -146,6 +179,7 @@ export class Board {
         piece = this.checkColumnMovement(i, j, emptySlots, piece);
       }
     }
+    this.endMovement('Top');
   }
 
   public moveDown() {
@@ -157,6 +191,7 @@ export class Board {
         piece = this.checkColumnMovement(i, j, emptySlots, piece);
       }
     }
+    this.endMovement('Down');
   }
 
   insertRandom() {
