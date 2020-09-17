@@ -1,6 +1,7 @@
 import p5 from 'p5';
 
 import { Board } from './board';
+import { Piece } from './piece';
 
 export class Game {
   private board: Board;
@@ -9,6 +10,14 @@ export class Game {
   constructor(p: p5) {
     this.p = p;
     this.board = new Board(p);
+  }
+
+  static get height() {
+    return Board.border * 5 + Piece.size * 4;
+  }
+
+  static get width() {
+    return Board.border * 5 + Piece.size * 4;
   }
 
   update() {
