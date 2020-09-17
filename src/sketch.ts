@@ -3,6 +3,11 @@ import p5 from 'p5';
 import { Game } from './game/game';
 import { Player } from './player/player';
 import { KeyboardPlayer } from './player/human';
+import { RandomPlayer } from './player/random';
+
+export function randomInt(min: number, max: number) {
+  return Math.ceil(Math.random() * (max - min) + min);
+}
 
 const sketch = function (p: p5) {
   const players: Player[] = [];
@@ -25,11 +30,15 @@ const sketch = function (p: p5) {
   p.preload = () => {};
 
   p.setup = function () {
-    // for (let i = 0; i < 16; i++) games.push(new Game(p));
-
     const game = new Game(p);
     games.push(game);
     players.push(new KeyboardPlayer(game));
+
+    for (let i = 0; i < 3; i++) {
+      const game = new Game(p);
+      games.push(game);
+      players.push(new RandomPlayer(game));
+    }
 
     distributeGames(games);
 
