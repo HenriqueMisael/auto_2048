@@ -10,11 +10,21 @@ export class Chromosome {
   }
 
   static fromCrossover(c0: Chromosome, c1: Chromosome) {
-    const middle = Math.ceil(c0.size / 2);
+    const pos = Math.ceil(Math.random() * c0.size);
+    const length = Math.ceil(Math.random() * (c0.size - pos));
 
-    const weights = c0.weights.slice(0, middle).concat(c1.weights.slice(middle));
+    const extract = c0.weights.slice(pos, pos + length);
 
-    return new Chromosome(weights);
+    const head = [];
+    for (let i = 0; i < pos; i++) {
+      head.push(c1.weights[i]);
+    }
+    const tail = [];
+    for (let i = pos + length; i < c1.weights.length; i++) {
+      tail.push(c1.weights[i]);
+    }
+
+    return new Chromosome(head.concat(extract).concat(tail));
   }
 
   static fromFixed(weights: number[]) {
@@ -31,5 +41,14 @@ export class Chromosome {
 
   calculate(input: number[]) {
     return input.reduce((sum, value, i) => sum + value * this.weights[i], 0);
+  }
+
+  mutate() {
+    const i0 = Math.random() * this.size;
+    const i1 = Math.random() * this.size;
+
+    const temp = this.weights[i0];
+    this.weights[i0] = this.weights[i1];
+    this.weights[i1] = temp;
   }
 }

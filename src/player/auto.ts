@@ -19,7 +19,7 @@ export abstract class AutoPlayer extends Player {
   get fitness() {
     const totalScore = this.game.totalScore ?? 0;
     const scorePerPiece = this.game.scorePerPiece ?? 0;
-    return totalScore; // + scorePerPiece * 5;
+    return totalScore + scorePerPiece * this.game.pieceCount;
   }
 
   protected abstract get moveOption(): number;

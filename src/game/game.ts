@@ -9,6 +9,7 @@ export class Game {
   public totalScore: number | null = null;
   public scorePerPiece: number | null = null;
   public drawing: boolean;
+  public pieceCount: number;
 
   constructor(p: p5, drawing: boolean = true) {
     this.p = p;
@@ -57,12 +58,11 @@ export class Game {
       (acc, row) => acc + row.reduce((acc, piece) => acc + (piece?.value ?? 0), 0),
       0,
     );
-    this.scorePerPiece =
-      this.totalScore /
-      this.board.slots.reduce(
-        (acc, row) => acc + row.filter((piece) => !!piece).length,
-        0,
-      );
+    this.pieceCount = this.board.slots.reduce(
+      (acc, row) => acc + row.filter((piece) => !!piece).length,
+      0,
+    );
+    this.scorePerPiece = this.totalScore / this.pieceCount;
   }
 
   public get ended() {

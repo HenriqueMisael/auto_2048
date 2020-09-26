@@ -10,6 +10,8 @@ export function randomInt(min: number, max: number) {
 }
 
 const POP_MAX = 32;
+const CROSSOVER_RATE = 0.3;
+const MUTATION_RATE = 0.05;
 
 const duplicatedPlayers = 2;
 const fixedPlayerCreators: (() => GeneticPlayer)[] = [];
@@ -21,7 +23,7 @@ function getBinaryArray(x: number) {
 
   while (x !== 0) {
     rem = x % 2;
-    x = parseInt(x / 2);
+    x = Math.floor(x / 2);
     bin = bin + rem * i;
     i = i * 10;
   }
@@ -82,12 +84,15 @@ const sketch = function (p: p5) {
   }
 
   p.setup = function () {
-    // p.frameRate(0.25);
-    fixedPlayerCreators.forEach((playerCreator) => {
-      for (let i = 0; i < duplicatedPlayers; i++) {
-        players.push(playerCreator());
-      }
-    });
+    p.frameRate(240);
+    // fixedPlayerCreators.forEach((playerCreator) => {
+    //   for (let i = 0; i < duplicatedPlayers; i++) {
+    //     players.push(playerCreator());
+    //   }
+    // });
+    for (let i = 0; i < POP_MAX; i++) {
+      players.push(GeneticPlayer.random(addGame()));
+    }
 
     distributeGames(games);
 
@@ -152,10 +157,21 @@ const sketch = function (p: p5) {
       const newPlayers: GeneticPlayer[] = [];
       const totalWeight = players.reduce((acc, player) => acc + player.fitness, 0);
       for (let i = 0; i < POP_MAX; i++) {
-        const parent0 = pickParent(players, totalWeight);
-        const parent1 = pickParent(players, totalWeight);
+        let newPlayer: GeneticPlayer;
 
-        newPlayers.push(GeneticPlayer.breed(addGame(), parent0, parent1));
+        const parent0 = pickParent(players, totalWeight);
+        const game = addGame();
+
+        if (Math.random() < CROSSOVER_RATE) {
+          const parent1 = pickParent(players, totalWeight);
+          newPlayer = GeneticPlayer.breed(game, parent0, parent1);
+        } else {
+          newPlayer = GeneticPlayer.replicate(game, parent0);
+        }
+
+        if (Math.random() < MUTATION_RATE) newPlayer.mutate();
+
+        newPlayers.push(newPlayer);
       }
       players = newPlayers;
       distributeGames(games);

@@ -26,10 +26,19 @@ export class GeneticPlayer extends AutoPlayer {
     return new GeneticPlayer(game, chromosomes);
   }
 
+  static replicate(game: Game, parent0: GeneticPlayer) {
+    const chromosomes = parent0.chromosomes;
+    return new GeneticPlayer(game, chromosomes);
+  }
+
   constructor(game: Game, chromosomes: Chromosome[]) {
     super(game);
     this.age = 1;
     this.chromosomes = chromosomes;
+  }
+
+  mutate() {
+    this.chromosomes.forEach((c) => c.mutate());
   }
 
   setGame(game: Game) {
