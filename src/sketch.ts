@@ -140,3 +140,5 @@ const sketch = function (p: p5) {
 };
 
 new p5(sketch);
+
+document.body.style.backgroundColor = '#333333';

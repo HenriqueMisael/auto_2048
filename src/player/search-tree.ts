@@ -31,11 +31,25 @@ export class SearchTreePlayer extends AutoPlayer {
     return this.game.boardState;
   }
 
+  private branchValue(state: BoardState, acc: number, deep: number): number {
+    if (deep === 0) return acc;
+    let utility = Number.NEGATIVE_INFINITY;
+    let bestState = state;
+    for (const possibleMovement of state.possibleMovements) {
+      const newState = state.move(possibleMovement);
+      if (newState.value <= utility) continue;
+      utility = newState.value;
+      bestState = newState;
+    }
+
+    return this.branchValue(bestState, utility, deep - 1);
+  }
+
   protected get moveOption(): number {
     let best = { utility: Number.NEGATIVE_INFINITY, movement: -1 };
 
     this.possibleMovements.forEach((movement) => {
-      const utility = this.move(movement).value;
+      const utility = this.branchValue(this.game.boardState.move(movement), 0, 64);
       if (utility <= best.utility) return;
       best.utility = utility;
       best.movement = movement;

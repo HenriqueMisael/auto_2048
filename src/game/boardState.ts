@@ -118,6 +118,32 @@ export class BoardState {
     );
   }
 
+  get possibleMovements() {
+    const movements = [];
+
+    if (this.leftAllowed) movements.push(0);
+    if (this.upAllowed) movements.push(1);
+    if (this.rightAllowed) movements.push(2);
+    if (this.downAllowed) movements.push(3);
+
+    return movements;
+  }
+
+  move(movement: number) {
+    switch (movement) {
+      case 0:
+        return this.left;
+      case 1:
+        return this.up;
+      case 2:
+        return this.right;
+      case 3:
+        return this.down;
+      default:
+        return this;
+    }
+  }
+
   get insertTile(): BoardState {
     const state = this.copyState;
     let i, j;
