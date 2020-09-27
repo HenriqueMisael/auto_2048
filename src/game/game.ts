@@ -1,67 +1,59 @@
-import p5 from 'p5';
-
-import { Board } from './board';
-import { Piece } from './piece';
+import { BoardState } from './boardState';
 
 export class Game {
-  private board: Board;
-  private p: p5;
+  boardState: BoardState;
   public totalScore: number | null = null;
   public scorePerPiece: number | null = null;
-  public drawing: boolean;
-  public pieceCount: number;
+  public pieceCount: number | null = null;
 
-  constructor(p: p5, drawing: boolean = true) {
-    this.p = p;
-    this.board = new Board(p);
-    this.drawing = drawing;
+  constructor() {
+    this.boardState = new BoardState([
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ]).insertTile.insertTile;
   }
 
+  public static boardBorder = 4;
+  public static pieceSize = 64;
+  public static pieceMiddleOffset = Game.pieceSize / 2;
+
   static get height() {
-    return Board.border * 5 + Piece.size * 4;
+    return Game.boardBorder * 5 + Game.pieceSize * 4;
   }
 
   static get width() {
-    return Board.border * 5 + Piece.size * 4;
-  }
-
-  get boardState() {
-    return this.board.state;
-  }
-
-  update() {
-    if (this.ended) return;
-    this.board.update(this.drawing);
-    const stuck = this.board.isStuck;
-    if (stuck) this.gameOver();
+    return Game.boardBorder * 5 + Game.pieceSize * 4;
   }
 
   move(movementCode: number) {
+    let newState;
     switch (movementCode) {
-      case this.p.UP_ARROW:
-        this.board.moveTop();
+      case 38:
+        newState = this.boardState.up;
         break;
-      case this.p.LEFT_ARROW:
-        this.board.moveLeft();
+      case 37:
+        newState = this.boardState.left;
         break;
-      case this.p.DOWN_ARROW:
-        this.board.moveDown();
+      case 40:
+        newState = this.boardState.down;
         break;
-      case this.p.RIGHT_ARROW:
-        this.board.moveRight();
+      case 39:
+        newState = this.boardState.right;
         break;
+      default:
+        newState = null;
     }
+
+    if (!newState || newState.equals(this.boardState)) return;
+
+    this.boardState = newState.insertTile;
   }
 
   public gameOver() {
-    this.totalScore = this.board.slots.reduce(
-      (acc, row) => acc + row.reduce((acc, piece) => acc + (piece?.value ?? 0), 0),
-      0,
-    );
-    this.pieceCount = this.board.slots.reduce(
-      (acc, row) => acc + row.filter((piece) => !!piece).length,
-      0,
-    );
+    this.totalScore = this.boardState.value;
+    this.pieceCount = this.boardState.pieceCount;
     this.scorePerPiece = this.totalScore / this.pieceCount;
   }
 
@@ -69,16 +61,11 @@ export class Game {
     return this.totalScore !== null;
   }
 
-  toggleDrawing() {
-    this.drawing = !this.drawing;
-    return this.drawing;
-  }
-
   get possibleMovements() {
-    const isLeftAllowed = !this.board.unsuccessfulMoves.includes('Left');
-    const isUpAllowed = !this.board.unsuccessfulMoves.includes('Top');
-    const isRightAllowed = !this.board.unsuccessfulMoves.includes('Right');
-    const isDownAllowed = !this.board.unsuccessfulMoves.includes('Down');
+    const isLeftAllowed = this.boardState.leftAllowed;
+    const isUpAllowed = this.boardState.upAllowed;
+    const isRightAllowed = this.boardState.rightAllowed;
+    const isDownAllowed = this.boardState.downAllowed;
 
     return [
       isLeftAllowed ? 1 : 0,
