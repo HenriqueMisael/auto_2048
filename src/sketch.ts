@@ -115,7 +115,6 @@ const sketch = function (p: p5) {
   }
 
   p.draw = function () {
-    players.forEach((player) => player.turnPassed());
     gamesMatrix.forEach((row, i) => {
       p.push();
       p.translate(0, Game.height * i);
@@ -131,6 +130,7 @@ const sketch = function (p: p5) {
       });
       p.pop();
     });
+    players.forEach((player) => player.turnPassed());
   };
 
   // @ts-ignore

@@ -31,16 +31,16 @@ export class Game {
     let newState;
     switch (movementCode) {
       case 38:
-        newState = this.boardState.up;
+        newState = this.boardState.up.boardState;
         break;
       case 37:
-        newState = this.boardState.left;
+        newState = this.boardState.left.boardState;
         break;
       case 40:
-        newState = this.boardState.down;
+        newState = this.boardState.down.boardState;
         break;
       case 39:
-        newState = this.boardState.right;
+        newState = this.boardState.right.boardState;
         break;
       default:
         newState = null;

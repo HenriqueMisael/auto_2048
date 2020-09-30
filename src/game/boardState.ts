@@ -1,3 +1,8 @@
+type CombinedBoardState = {
+  boardState: BoardState;
+  combinedScore: number;
+};
+
 export class BoardState {
   private readonly state: number[][];
 
@@ -5,14 +10,14 @@ export class BoardState {
     this.state = state;
   }
 
-  public get value() {
+  public get value(): number {
     return this.state.reduce(
       (acc, row) => acc + row.reduce((acc, value) => acc + value, 0),
       0,
     );
   }
 
-  public get pieceCount() {
+  public get pieceCount(): number {
     return this.state.reduce((acc, row) => acc + row.reduce((acc) => acc + 1, 0), 0);
   }
 
@@ -20,7 +25,7 @@ export class BoardState {
     return [...this.state.map((row) => [...row])];
   }
 
-  private get reverse() {
+  private get reverse(): BoardState {
     const reversed: number[][] = this.copyState;
 
     this.state.forEach((row, i) => {
@@ -34,20 +39,23 @@ export class BoardState {
     return new BoardState(reversed);
   }
 
-  private get combine() {
+  private get combine(): CombinedBoardState {
+    let combinedScore = 0;
     const combined = this.copyState;
     for (let i = 0; i < combined.length; i++) {
       for (let j = 0; j < combined[i].length; j++) {
         if (combined[i][j] != 0 && combined[i][j] == combined[i][j + 1]) {
           combined[i][j] += 1;
           combined[i][j + 1] = 0;
+
+          combinedScore += Math.pow(2, combined[i][j]);
         }
       }
     }
-    return new BoardState(combined);
+    return { boardState: new BoardState(combined), combinedScore };
   }
 
-  private get stack() {
+  private get stack(): BoardState {
     const stacked = this.copyState;
     for (let x = 0; x < 4; x++) {
       for (let i = 0; i < stacked.length; i++) {
@@ -69,7 +77,7 @@ export class BoardState {
     return new BoardState(stacked);
   }
 
-  private get transpose() {
+  private get transpose(): BoardState {
     const transposed: number[][] = this.copyState;
     for (let i = 0; i < this.state.length; i++) {
       for (let j = 0; j < transposed[i].length; j++) {
@@ -80,36 +88,46 @@ export class BoardState {
     return new BoardState(transposed);
   }
 
-  get up(): BoardState {
-    return this.transpose.stack.combine.stack.transpose;
+  get up(): CombinedBoardState {
+    const { boardState, combinedScore } = this.transpose.stack.combine;
+    return { boardState: boardState.stack.transpose, combinedScore };
   }
 
-  get left(): BoardState {
-    return this.stack.combine.stack;
+  get left(): CombinedBoardState {
+    const { boardState, combinedScore } = this.stack.combine;
+    return { boardState: boardState.stack, combinedScore };
   }
 
-  get down(): BoardState {
-    return this.transpose.reverse.stack.combine.stack.reverse.transpose;
+  get down(): CombinedBoardState {
+    const { boardState, combinedScore } = this.transpose.reverse.stack.combine;
+    return {
+      boardState: boardState.stack.reverse.transpose,
+      combinedScore,
+    };
   }
 
-  get right(): BoardState {
-    return this.reverse.stack.combine.stack.reverse;
+  get right(): CombinedBoardState {
+    const { boardState, combinedScore } = this.reverse.stack.combine;
+    return {
+      boardState: boardState.stack.reverse,
+      combinedScore,
+    };
   }
 
   get leftAllowed() {
-    return !this.equals(this.left);
+    return !this.equals(this.left.boardState);
   }
 
   get upAllowed() {
-    return !this.equals(this.up);
+    return !this.equals(this.up.boardState);
   }
 
   get rightAllowed() {
-    return !this.equals(this.right);
+    return !this.equals(this.right.boardState);
   }
 
   get downAllowed() {
-    return !this.equals(this.down);
+    return !this.equals(this.down.boardState);
   }
 
   get isStuck() {
@@ -140,7 +158,7 @@ export class BoardState {
       case 3:
         return this.down;
       default:
-        return this;
+        return { boardState: this, combinedScore: 0 };
     }
   }
 

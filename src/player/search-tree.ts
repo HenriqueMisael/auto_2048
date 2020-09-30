@@ -2,59 +2,67 @@ import { AutoPlayer } from './auto';
 import { Game } from '../game/game';
 import { BoardState } from '../game/boardState';
 
-type Best = {
-  utility: number;
-  movement: number;
-};
 export class SearchTreePlayer extends AutoPlayer {
+  private static moveAndInsertTile(inputBoard: BoardState, move: number) {
+    const { combinedScore, boardState } = inputBoard.move(move);
+    return {
+      boardState: boardState.insertTile,
+      score: combinedScore,
+    };
+  }
+
+  private static randomRun(inputBoard: BoardState, move: number) {
+    let { boardState, score } = SearchTreePlayer.moveAndInsertTile(inputBoard, move);
+
+    while (true) {
+      const { possibleMovements } = boardState;
+      const possibleMovementsCount = possibleMovements.length;
+      if (possibleMovementsCount === 0) break;
+
+      const randomMovement =
+        possibleMovements[Math.floor(Math.random() * possibleMovementsCount)];
+      const result = SearchTreePlayer.moveAndInsertTile(boardState, randomMovement);
+      boardState = result.boardState;
+      score += result.score;
+    }
+    return score;
+  }
+
   constructor(game: Game) {
     super(game);
   }
 
   private get possibleMovements() {
-    return this.game.possibleMovements
-      .map((possible, i) => (possible === 1 ? i : -1))
-      .filter((movement) => movement >= 0);
-  }
-
-  private move(movement: number): BoardState {
-    switch (movement) {
-      case 0:
-        return this.game.boardState.left;
-      case 1:
-        return this.game.boardState.up;
-      case 2:
-        return this.game.boardState.right;
-      case 3:
-        return this.game.boardState.down;
-    }
-    return this.game.boardState;
-  }
-
-  private branchValue(state: BoardState, acc: number, deep: number): number {
-    if (deep === 0) return acc;
-    let utility = Number.NEGATIVE_INFINITY;
-    let bestState = state;
-    for (const possibleMovement of state.possibleMovements) {
-      const newState = state.move(possibleMovement);
-      if (newState.value <= utility) continue;
-      utility = newState.value;
-      bestState = newState;
-    }
-
-    return this.branchValue(bestState, utility, deep - 1);
+    return this.game.boardState.possibleMovements;
   }
 
   protected get moveOption(): number {
-    let best = { utility: Number.NEGATIVE_INFINITY, movement: -1 };
+    let bestScore = Number.NEGATIVE_INFINITY;
+    let bestMove = -1;
 
-    this.possibleMovements.forEach((movement) => {
-      const utility = this.branchValue(this.game.boardState.move(movement), 0, 64);
-      if (utility <= best.utility) return;
-      best.utility = utility;
-      best.movement = movement;
-    });
+    for (const possibleMovement of this.possibleMovements) {
+      const runs = 25;
 
-    return best.movement;
+      let total = 0.0;
+      let min = 1000000;
+      let max = 0;
+
+      for (let i = 0; i < runs; i++) {
+        const score = SearchTreePlayer.randomRun(this.game.boardState, possibleMovement);
+
+        total += score;
+        if (score < min) min = score;
+        if (score > max) max = score;
+      }
+
+      const averageScore = total / runs;
+
+      if (averageScore >= bestScore) {
+        bestScore = averageScore;
+        bestMove = possibleMovement;
+      }
+    }
+
+    return bestMove;
   }
 }
