@@ -69,7 +69,15 @@ const sketch = function (p: p5) {
   p.setup = function () {
     p.frameRate(60);
 
-    players.push(new SearchTreePlayer(addGame()));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
+    players.push(new SearchTreePlayer(addGame(), 25));
 
     distributeGames(games);
 
@@ -115,6 +123,19 @@ const sketch = function (p: p5) {
   }
 
   p.draw = function () {
+    for (let i = 0; i < players.length; i++) {
+      const { game } = players[i];
+      if (game.ended) {
+        const pieces: number[] = [];
+        game.boardState.forEachPiece((value) => {
+          pieces.push(Math.pow(2, value));
+        });
+        console.log(pieces.join(','));
+        const newGame = addGame();
+        games[i] = newGame;
+        players[i] = new SearchTreePlayer(newGame, 25);
+      }
+    }
     gamesMatrix.forEach((row, i) => {
       p.push();
       p.translate(0, Game.height * i);

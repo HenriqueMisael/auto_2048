@@ -5,61 +5,62 @@ import { BoardState } from '../game/boardState';
 export class SearchTreePlayer extends AutoPlayer {
   private static moveAndInsertTile(inputBoard: BoardState, move: number) {
     const { combinedScore, boardState } = inputBoard.move(move);
+    if (boardState.equals(inputBoard)) return null;
     return {
       boardState: boardState.insertTile,
       score: combinedScore,
     };
   }
-
   private static randomRun(inputBoard: BoardState, move: number) {
-    let { boardState, score } = SearchTreePlayer.moveAndInsertTile(inputBoard, move);
+    let result = SearchTreePlayer.moveAndInsertTile(inputBoard, move);
 
+    if (result === null) return 0;
+    let { boardState, score } = result;
+    let tries = 0;
     while (true) {
-      const { possibleMovements } = boardState;
-      const possibleMovementsCount = possibleMovements.length;
-      if (possibleMovementsCount === 0) break;
-
-      const randomMovement =
-        possibleMovements[Math.floor(Math.random() * possibleMovementsCount)];
+      if (tries === 4) break;
+      const randomMovement = Math.floor(Math.random() * 4);
       const result = SearchTreePlayer.moveAndInsertTile(boardState, randomMovement);
-      boardState = result.boardState;
-      score += result.score;
+      if (result === null) {
+        tries++;
+      } else {
+        tries = 0;
+        boardState = result.boardState;
+        score += result.score;
+      }
     }
     return score;
   }
 
-  constructor(game: Game) {
-    super(game);
-  }
+  private readonly runs: number;
 
-  private get possibleMovements() {
-    return this.game.boardState.possibleMovements;
+  constructor(game: Game, runs: number) {
+    super(game);
+    this.runs = runs;
   }
 
   protected get moveOption(): number {
-    let bestScore = Number.NEGATIVE_INFINITY;
+    let bestScore = 0;
     let bestMove = -1;
 
-    for (const possibleMovement of this.possibleMovements) {
-      const runs = 25;
-
+    for (let movement = 0; movement < 4; movement++) {
       let total = 0.0;
       let min = 1000000;
       let max = 0;
 
-      for (let i = 0; i < runs; i++) {
-        const score = SearchTreePlayer.randomRun(this.game.boardState, possibleMovement);
+      for (let i = 0; i < this.runs; i++) {
+        const score = SearchTreePlayer.randomRun(this.game.boardState, movement);
 
         total += score;
         if (score < min) min = score;
         if (score > max) max = score;
       }
 
-      const averageScore = total / runs;
+      const averageScore = total / this.runs;
 
-      if (averageScore >= bestScore) {
+      if (averageScore > bestScore) {
         bestScore = averageScore;
-        bestMove = possibleMovement;
+        bestMove = movement;
       }
     }
 

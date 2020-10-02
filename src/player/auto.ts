@@ -8,7 +8,6 @@ export abstract class AutoPlayer extends Player {
   turnPassed() {
     if (this.game.ended) return;
     const moveOption = this.moveOption;
-
     if (moveOption < 0) {
       this.game.gameOver();
     } else {

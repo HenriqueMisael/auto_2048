@@ -1,7 +1,7 @@
 import { Game } from '../game/game';
 
 export abstract class Player {
-  protected game: Game;
+  game: Game;
 
   constructor(game: Game) {
     this.game = game;

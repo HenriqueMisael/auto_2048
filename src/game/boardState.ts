@@ -189,4 +189,8 @@ export class BoardState {
     }
     return true;
   }
+
+  forEachPiece(func: (value: number) => void) {
+    this.state.forEach((row) => row.forEach(func));
+  }
 }
