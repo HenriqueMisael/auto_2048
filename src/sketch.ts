@@ -4,10 +4,15 @@ import { Game } from './game/game';
 import { Player } from './player/player';
 import { SearchTreePlayer } from './player/search-tree';
 import { BoardState } from './game/boardState';
+import { KeyboardPlayer } from './player/human';
 
 export function randomInt(min: number, max: number) {
   return Math.ceil(Math.random() * (max - min) + min);
 }
+const GAME_SIZE = 5;
+const GAME_HEIGHT = Game.boardBorder * 5 + Game.pieceSize * GAME_SIZE;
+const GAME_WIDTH = Game.boardBorder * 5 + Game.pieceSize * GAME_SIZE;
+
 const colors = [
   '#dedede',
   '#decdcd',
@@ -40,8 +45,8 @@ const sketch = function (p: p5) {
   let players: Player[] = [];
   let games: Game[] = [];
 
-  function addGame() {
-    const game = new Game();
+  function addGame(size: number) {
+    const game = new Game(size);
     games.push(game);
     return game;
   }
@@ -50,7 +55,7 @@ const sketch = function (p: p5) {
 
   function distributeGames(games: Game[]) {
     gamesMatrix = [];
-    const gamesPerRow = Math.floor(p.windowWidth / Game.width);
+    const gamesPerRow = Math.floor(p.windowWidth / GAME_WIDTH);
 
     let i = 0;
     for (let k = 0; k < games.length; ) {
@@ -69,22 +74,17 @@ const sketch = function (p: p5) {
   p.setup = function () {
     p.frameRate(60);
 
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
-    players.push(new SearchTreePlayer(addGame(), 25));
+    const firstGame = addGame(GAME_SIZE);
+    const player = new SearchTreePlayer(firstGame, 16);
+    // const player = new KeyboardPlayer(firstGame);
+    players.push(player);
 
     distributeGames(games);
 
     const rows = gamesMatrix.length;
     const columns = gamesMatrix[0].length;
-    const height = rows * Game.height;
-    const width = columns * Game.width;
+    const height = rows * GAME_HEIGHT;
+    const width = columns * GAME_WIDTH;
     p.createCanvas(width, height);
 
     drawButton = p.createButton('Toggle drawing');
@@ -99,9 +99,11 @@ const sketch = function (p: p5) {
   function drawBoard(board: BoardState) {
     p.strokeWeight(0);
     p.translate(Game.boardBorder, Game.boardBorder);
-    board.copyState.forEach((row, i) =>
+    // console.log('-------');
+    board.copyState.forEach((row, i) => {
+      // console.log(row);
       row.forEach((value, j) => {
-        p.fill(value === 0 ? '#888888' : colors[value]);
+        p.fill(value === 0 ? '#888888' : colors[Math.min(value, colors.length - 1)]);
 
         const top = i * (Game.pieceSize + Game.boardBorder);
         const left = j * (Game.pieceSize + Game.boardBorder);
@@ -109,6 +111,7 @@ const sketch = function (p: p5) {
         p.square(left, top, Game.pieceSize);
 
         if (value === 0) return;
+
         p.fill('white');
         p.textSize(16);
         p.textStyle(p.BOLD);
@@ -118,32 +121,19 @@ const sketch = function (p: p5) {
           left + Game.pieceMiddleOffset,
           top + Game.pieceMiddleOffset,
         );
-      }),
-    );
+      });
+    });
   }
 
   p.draw = function () {
-    for (let i = 0; i < players.length; i++) {
-      const { game } = players[i];
-      if (game.ended) {
-        const pieces: number[] = [];
-        game.boardState.forEachPiece((value) => {
-          pieces.push(Math.pow(2, value));
-        });
-        console.log(pieces.join(','));
-        const newGame = addGame();
-        games[i] = newGame;
-        players[i] = new SearchTreePlayer(newGame, 25);
-      }
-    }
     gamesMatrix.forEach((row, i) => {
       p.push();
-      p.translate(0, Game.height * i);
+      p.translate(0, GAME_HEIGHT * i);
       row.forEach((game, j) => {
         if (!game || game.ended) return;
 
         p.push();
-        p.translate(Game.width * j, 0);
+        p.translate(GAME_WIDTH * j, 0);
 
         drawBoard(game.boardState);
 
@@ -152,6 +142,21 @@ const sketch = function (p: p5) {
       p.pop();
     });
     players.forEach((player) => player.turnPassed());
+    for (let i = 0; i < players.length; i++) {
+      const { game } = players[i];
+      if (game.ended) {
+        // const pieces: number[] = [];
+        // game.boardState.forEachPiece((value) => {
+        //   pieces.push(Math.pow(2, value));
+        // });
+        // console.log(pieces.join(','));
+
+        const newGame = new Game(game.boardState.size);
+        games[i] = newGame;
+        players[i] = new SearchTreePlayer(newGame, 25);
+        distributeGames(games);
+      }
+    }
   };
 
   // @ts-ignore

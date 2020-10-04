@@ -15,11 +15,11 @@ export abstract class AutoPlayer extends Player {
     }
   }
 
+  protected abstract get moveOption(): number;
+
   get fitness() {
     const totalScore = this.game.totalScore ?? 0;
     const scorePerPiece = this.game.scorePerPiece ?? 0;
     return totalScore + scorePerPiece * (this.game.pieceCount ?? 0);
   }
-
-  protected abstract get moveOption(): number;
 }

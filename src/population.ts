@@ -69,7 +69,7 @@ function generateNewGeneration(players: GeneticPlayer[]) {
     let newPlayer: GeneticPlayer;
 
     const parent0 = pickParent(players, totalWeight);
-    const game = new Game();
+    const game = new Game(parent0.game.boardState.size);
 
     if (Math.random() < CROSSOVER_RATE) {
       const parent1 = pickParent(players, totalWeight);

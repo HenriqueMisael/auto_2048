@@ -13,7 +13,6 @@ export class SearchTreePlayer extends AutoPlayer {
   }
   private static randomRun(inputBoard: BoardState, move: number) {
     let result = SearchTreePlayer.moveAndInsertTile(inputBoard, move);
-
     if (result === null) return 0;
     let { boardState, score } = result;
     let tries = 0;
@@ -43,17 +42,17 @@ export class SearchTreePlayer extends AutoPlayer {
     let bestScore = 0;
     let bestMove = -1;
 
-    for (let movement = 0; movement < 4; movement++) {
+    for (let movement = 0; movement < this.game.boardState.size; movement++) {
       let total = 0.0;
-      let min = 1000000;
-      let max = 0;
+      // let min = 1000000;
+      // let max = 0;
 
       for (let i = 0; i < this.runs; i++) {
         const score = SearchTreePlayer.randomRun(this.game.boardState, movement);
 
         total += score;
-        if (score < min) min = score;
-        if (score > max) max = score;
+        // if (score < min) min = score;
+        // if (score > max) max = score;
       }
 
       const averageScore = total / this.runs;

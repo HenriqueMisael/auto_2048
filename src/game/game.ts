@@ -6,26 +6,19 @@ export class Game {
   public scorePerPiece: number | null = null;
   public pieceCount: number | null = null;
 
-  constructor() {
-    this.boardState = new BoardState([
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ]).insertTile.insertTile;
+  constructor(size: number) {
+    // this.boardState = new BoardState([
+    //   [0, 0, 0, 0],
+    //   [0, 0, 0, 0],
+    //   [0, 0, 0, 0],
+    //   [0, 0, 0, 0],
+    // ]).insertTile.insertTile;
+    this.boardState = BoardState.fromSize(size);
   }
 
   public static boardBorder = 4;
   public static pieceSize = 64;
   public static pieceMiddleOffset = Game.pieceSize / 2;
-
-  static get height() {
-    return Game.boardBorder * 5 + Game.pieceSize * 4;
-  }
-
-  static get width() {
-    return Game.boardBorder * 5 + Game.pieceSize * 4;
-  }
 
   move(movementCode: number) {
     let newState;
