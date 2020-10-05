@@ -2,9 +2,9 @@ import { BoardState } from './boardState';
 
 export class Game {
   boardState: BoardState;
-  public totalScore: number | null = null;
-  public scorePerPiece: number | null = null;
-  public pieceCount: number | null = null;
+  public totalScore: number;
+  public pastTime: number;
+  private _ended: boolean = false;
 
   constructor(size: number) {
     // this.boardState = new BoardState([
@@ -14,6 +14,8 @@ export class Game {
     //   [0, 0, 0, 0],
     // ]).insertTile.insertTile;
     this.boardState = BoardState.fromSize(size);
+    this.pastTime = 0;
+    this.totalScore = 0;
   }
 
   public static boardBorder = 4;
@@ -21,37 +23,43 @@ export class Game {
   public static pieceMiddleOffset = Game.pieceSize / 2;
 
   move(movementCode: number) {
-    let newState;
+    let result;
     switch (movementCode) {
       case 38:
-        newState = this.boardState.up.boardState;
+        result = this.boardState.up;
         break;
       case 37:
-        newState = this.boardState.left.boardState;
+        result = this.boardState.left;
         break;
       case 40:
-        newState = this.boardState.down.boardState;
+        result = this.boardState.down;
         break;
       case 39:
-        newState = this.boardState.right.boardState;
+        result = this.boardState.right;
         break;
       default:
-        newState = null;
+        result = null;
     }
 
-    if (!newState || newState.equals(this.boardState)) return;
+    this.totalScore += result?.combinedScore ?? 0;
 
-    this.boardState = newState.insertTile;
+    if (this.boardState.higherPiece === 11) this.gameOver();
+
+    if (!result || result.boardState.equals(this.boardState)) return;
+
+    this.boardState = result.boardState.insertTile;
+  }
+
+  public get higherPiece() {
+    return this.boardState.higherPiece;
   }
 
   public gameOver() {
-    this.totalScore = this.boardState.value;
-    this.pieceCount = this.boardState.pieceCount;
-    this.scorePerPiece = this.totalScore / this.pieceCount;
+    this._ended = true;
   }
 
   public get ended() {
-    return this.totalScore !== null;
+    return this._ended;
   }
 
   get possibleMovements() {

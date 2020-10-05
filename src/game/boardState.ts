@@ -241,4 +241,12 @@ export class BoardState {
   forEachPiece(func: (value: number) => void) {
     this.state.forEach((row) => row.forEach(func));
   }
+
+  get higherPiece() {
+    let max = 0;
+    this.forEachPiece((value) => {
+      if (value > max) max = value;
+    });
+    return max;
+  }
 }

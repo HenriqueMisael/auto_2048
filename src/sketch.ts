@@ -9,7 +9,24 @@ import { KeyboardPlayer } from './player/human';
 export function randomInt(min: number, max: number) {
   return Math.ceil(Math.random() * (max - min) + min);
 }
-const GAME_SIZE = 5;
+
+function getParameterByName(name: string, defaultValue: number): number {
+  const url = window.location.href;
+  name = name.replace(/[\[\]]/g, '\\$&');
+  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+    results = regex.exec(url);
+  if (!results) return defaultValue;
+  if (!results[2]) return defaultValue;
+  return parseInt(decodeURIComponent(results[2].replace(/\+/g, ' ')));
+}
+
+const PLAYER_HUMAN = 1;
+const PLAYER_SEARCH_TREE = 2;
+
+const RUNS = getParameterByName('runs', 16);
+const GAME_SIZE = getParameterByName('size', 4);
+const AMOUNT = getParameterByName('amount', 1);
+const PLAYER = getParameterByName('player', PLAYER_HUMAN);
 const GAME_HEIGHT = Game.boardBorder * 5 + Game.pieceSize * GAME_SIZE;
 const GAME_WIDTH = Game.boardBorder * 5 + Game.pieceSize * GAME_SIZE;
 
@@ -28,18 +45,6 @@ const colors = [
   '#342323',
   '#231212',
 ];
-
-export function mapRange(
-  input: number,
-  source: [number, number],
-  target: [number, number],
-) {
-  const [xMin, xMax] = target;
-  const [yMin, yMax] = source;
-
-  const percent = (input - yMin) / (yMax - yMin);
-  return percent * (xMax - xMin) + xMin;
-}
 
 const sketch = function (p: p5) {
   let players: Player[] = [];
@@ -74,11 +79,18 @@ const sketch = function (p: p5) {
   p.setup = function () {
     p.frameRate(60);
 
-    const firstGame = addGame(GAME_SIZE);
-    const player = new SearchTreePlayer(firstGame, 16);
-    // const player = new KeyboardPlayer(firstGame);
-    players.push(player);
+    drawButton = p.createButton('Toggle drawing');
+    drawButton.mouseClicked(() => (drawButton.active = !drawButton.active));
+    drawButton.active = true;
 
+    if (PLAYER === PLAYER_HUMAN) {
+      players.push(new KeyboardPlayer(addGame(GAME_SIZE)));
+    } else if (PLAYER === PLAYER_SEARCH_TREE) {
+      for (let i = 0; i < AMOUNT; i++)
+        players.push(new SearchTreePlayer(addGame(GAME_SIZE), RUNS));
+    } else {
+      throw new Error('Need to set a player');
+    }
     distributeGames(games);
 
     const rows = gamesMatrix.length;
@@ -86,10 +98,6 @@ const sketch = function (p: p5) {
     const height = rows * GAME_HEIGHT;
     const width = columns * GAME_WIDTH;
     p.createCanvas(width, height);
-
-    drawButton = p.createButton('Toggle drawing');
-    drawButton.mouseClicked(() => (drawButton.active = !drawButton.active));
-    drawButton.active = true;
   };
 
   p.windowResized = function () {
@@ -126,34 +134,44 @@ const sketch = function (p: p5) {
   }
 
   p.draw = function () {
-    gamesMatrix.forEach((row, i) => {
-      p.push();
-      p.translate(0, GAME_HEIGHT * i);
-      row.forEach((game, j) => {
-        if (!game || game.ended) return;
-
+    if (drawButton.active) {
+      gamesMatrix.forEach((row, i) => {
         p.push();
-        p.translate(GAME_WIDTH * j, 0);
+        p.translate(0, GAME_HEIGHT * i);
+        row.forEach((game, j) => {
+          if (!game || game.ended) return;
 
-        drawBoard(game.boardState);
+          p.push();
+          p.translate(GAME_WIDTH * j, 0);
 
+          drawBoard(game.boardState);
+
+          p.pop();
+        });
         p.pop();
       });
-      p.pop();
-    });
+      // } else {
+      //   p.stroke('#333333');
+      //   p.fill('#333333');
+      //   p.rect(0, 0, GAME_WIDTH * gamesMatrix[0].length, GAME_HEIGHT * gamesMatrix.length);
+    }
     players.forEach((player) => player.turnPassed());
     for (let i = 0; i < players.length; i++) {
       const { game } = players[i];
+      game.pastTime += p.deltaTime;
       if (game.ended) {
-        // const pieces: number[] = [];
-        // game.boardState.forEachPiece((value) => {
-        //   pieces.push(Math.pow(2, value));
-        // });
-        // console.log(pieces.join(','));
+        console.log(
+          'Time: ',
+          game.pastTime,
+          'Score:',
+          game.totalScore,
+          'Peça:',
+          game.higherPiece,
+        );
 
         const newGame = new Game(game.boardState.size);
         games[i] = newGame;
-        players[i] = new SearchTreePlayer(newGame, 25);
+        players[i] = new SearchTreePlayer(newGame, RUNS);
         distributeGames(games);
       }
     }
